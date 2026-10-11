@@ -1,8 +1,13 @@
 # The six reviewer roles
 
+These are the six core adversarial roles the `manuscript-review` CLI runs by default. This file is
+the reference for **reading and grouping** the CLI's output in triage, and for the Claude-native
+**fallback** (SKILL.md §5) when the CLI is unavailable — it is not a second implementation of the
+tool.
+
 Each role is an independent reviewer with a distinct altitude and a distinct thing it is paid to
-distrust. Run them separately; the point of six is that an issue flagged by several independent
-roles is a real signal, whereas any single finding is low-confidence by design.
+distrust. The point of six is that an issue flagged by several independent roles is a real signal,
+whereas any single finding is low-confidence by design.
 
 For every role: ground each finding in a verbatim quote from the draft, prefer a cheap decisive
 check as the fix, and attack the strongest version of the claim — not a strawman.
