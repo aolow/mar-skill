@@ -1,43 +1,49 @@
-# manuscript_adversarial_reviewer (`mar`)
+# mar-skill
 
-A standalone, globally invokable Claude Code skill that runs a **six-role adversarial peer-review
-panel** against an unsubmitted manuscript draft, to anticipate the harshest reviewer objections
-before submission.
+A globally invokable Claude Code skill (`/mar`) that **wraps** the manuscript adversarial reviewer
+CLI — package `manuscript-adversarial-review`, source
+[`aolow/manuscript-adversarial-reviewer`](https://github.com/aolow/manuscript-adversarial-reviewer).
 
-The model performs the review itself — there is no external runner. It reads the draft, plays six
-independent reviewer roles (methods, reviewer2, scientific, novelty, reproducibility,
-computational), emits grounded severity-tagged findings, and triages them into priority themes
-with recommended dispositions.
+The CLI does the review (extraction, deterministic checks, six-role Bedrock panel, grounded
+findings, Markdown + JSON report). This skill invokes it correctly, keeps output durable, and
+triages the result into the dated `MAR_REVIEW_CHECKLIST_*.md` format. It is **not** a reimplementation
+— the CLI's `--help` and its own docs are the source of truth.
 
 ## Layout
 
 ```
-SKILL.md                          the skill (frontmatter name: mar)
-references/roles.md               the six role charges
-references/checklist-template.md  the output checklist format
+SKILL.md                          the skill (name: mar) — wrapper + fallback
+references/roles.md               the six role charges (for reading/grouping output)
+references/checklist-template.md  the triage checklist format
 ```
 
 ## Install (global, all projects)
 
-Symlinked into the user-level skills directory so it is invokable as `/mar` from any project:
-
 ```sh
-mkdir -p ~/.claude/skills
-ln -s ~/Stash/manuscript_adversarial_reviewer ~/.claude/skills/mar
+# the review engine (once):
+pip install "git+ssh://git@github.com/aolow/manuscript-adversarial-reviewer.git#egg=manuscript-adversarial-review[bedrock]"
+
+# the skill (symlink into the user-level skills dir so /mar works everywhere):
+ln -s ~/Stash/mar-skill ~/.claude/skills/mar
 ```
+
+Bedrock needs `MANUSCRIPT_REVIEW_MODEL` (or `--model`) and AWS creds (`AWS_PROFILE` / `AWS_REGION`).
 
 ## Use
 
 ```
-/mar path/to/DRAFT.md            # optionally name the target journal for hard-gate selection
+/mar path/to/DRAFT.md                 # six-role Bedrock review + triage
 ```
 
-Output: a dated `MAR_REVIEW_CHECKLIST_<YYYY-MM-DD>.md` written next to the draft, plus a short
-summary. MAR reviews only — it never edits the manuscript; adjudication (`[A]/[R]/[P]`) is left to
-the author.
+Direct CLI equivalent:
 
-## Origin
+```sh
+manuscript-review review DRAFT.md --llm --provider bedrock \
+  --model "$MANUSCRIPT_REVIEW_MODEL" --journal "Genome Biology" \
+  --out DRAFT_DIR/mar_reviews/$(date +%F) --force
+```
 
-Encodes the methodology first used on the CAF-state manuscript
-(`~/Stash/caf_state_manuscript/paper/MAR_REVIEW_CHECKLIST_2026-10-07.md`): grounded findings,
-severity tiers, and cross-role convergence as the primary signal.
+Output: `report.md` + `report.json` under the `--out` dir, plus a triaged
+`MAR_REVIEW_CHECKLIST_<date>.md` next to the draft. MAR reviews only — it never edits the
+manuscript. If the CLI/Bedrock is unavailable, `/mar` falls back to a Claude-native panel over the
+same six roles (SKILL.md §5), labeled as such.

@@ -1,116 +1,101 @@
 ---
 name: mar
-description: Manuscript Adversarial Reviewer. Run a six-role adversarial peer-review panel against an unsubmitted manuscript draft to anticipate the harshest reviewer objections before submission, then triage the findings into priority themes with recommended dispositions. Use when the user asks to MAR a draft, run an adversarial/pre-submission review, stress-test a paper's claims, or anticipate reviewer attacks. Invoked as /mar [path-to-draft].
+description: Manuscript Adversarial Reviewer. Drive the `manuscript-review` CLI (package manuscript-adversarial-review, repo aolow/manuscript-adversarial-reviewer) to run a six-role adversarial peer-review panel over Bedrock against a manuscript draft, then surface and triage the findings before submission. Use when the user asks to MAR a draft, run an adversarial/pre-submission review, stress-test a paper's claims, or anticipate reviewer attacks. Invoked as /mar [path-to-draft].
 ---
 
-# mar — Manuscript Adversarial Reviewer
+# mar — Manuscript Adversarial Reviewer (wrapper)
 
-Run a six-role adversarial peer-review panel against a manuscript draft, grounded in verbatim
-quotes from the draft, then triage the findings. The purpose is **reviewer anticipation on an
-unsubmitted draft** — surface the objections a hostile, competent reviewer would raise, so the
-authors can accept/revise or build a rebuttal *before* submission. These are not detected
-errors; they are claims to adjudicate.
+This skill is a **wrapper** around the real tool: the `manuscript-review` CLI (package
+`manuscript-adversarial-review`, source `github.com/aolow/manuscript-adversarial-reviewer`). The
+CLI does the work — it extracts the manuscript, runs deterministic reporting/design checks, calls
+the six-role LLM panel over Amazon Bedrock, grounds every concern to a verbatim excerpt, and writes
+a Markdown + JSON report. This skill's job is to invoke it correctly, keep the output durable, and
+triage the result into the repo's checklist format.
 
-The model does the whole review itself. There is no external runner — you read the draft, play
-each role in turn, and write the findings and triage to a dated checklist file.
+The CLI is the source of truth for flags and behavior — run `manuscript-review review --help`
+rather than restating its rules here. If the CLI is unavailable, fall back to the Claude-native
+panel (§5).
 
-## 1. Inputs
+## 1. Preflight
 
-- **Draft path** (required): a manuscript file (markdown preferred; also `.tex`, `.docx`→read as
-  text, or a directory of section files). If not given, ask for it. Read the whole thing.
-- **Target journal** (optional): changes which bars are *hard gates* (e.g. Genome Biology /
-  Nature-family require a data-and-code-availability gate; clinical journals require
-  reporting-standard compliance). If unknown, ask or state the gate as journal-agnostic.
-- **Scope** (optional): which roles to run (default: all six) and whether to limit to specific
-  sections.
-- **Repo conventions**: if the draft sits in a repo with a `CONVENTIONS.md`, read it — honor its
-  terminology and sign conventions in how you phrase findings, but do not let it soften the
-  adversarial read.
+1. **Find the CLI.** `command -v manuscript-review`. If missing, tell the user to install it (do
+   **not** clone into `/tmp`):
+   `pip install "git+ssh://git@github.com/aolow/manuscript-adversarial-reviewer.git#egg=manuscript-adversarial-review[bedrock]"`
+   then stop for them to install, or use the §5 fallback.
+2. **Bedrock creds.** The panel needs AWS credentials and a Bedrock model id. Check env:
+   `MANUSCRIPT_REVIEW_MODEL` (required unless passed as `--model`), `AWS_PROFILE` / `AWS_REGION`
+   (or `MANUSCRIPT_REVIEW_AWS_REGION`). If no model is resolvable, ask the user for the Bedrock
+   model id / inference-profile ARN (and confirm the AWS profile) before running — do not guess one.
+3. **Draft path** (required). If not given, ask. Note the draft's directory — output goes there.
 
-## 2. The six roles
+## 2. Run
 
-Run each as an independent reviewer. Do not let one role's conclusions leak into another's — the
-value is **cross-role convergence**: when independent roles flag the same issue, that is the real
-signal, far more than any single low-confidence finding. Full charges in
-[references/roles.md](references/roles.md); in brief:
+Always pass an explicit, durable `--out` **next to the manuscript** — the CLI's default output dir
+is relative to the current working directory, which is how a prior run landed in `/tmp` and nearly
+got purged. Write to `<draft_dir>/mar_reviews/<YYYY-MM-DD>[_tag]/` instead.
 
-1. **methods** — study design, statistics, controls, thresholds, power. Is each test the right
-   test, is each threshold justified, is each control present?
-2. **reviewer2** — the skeptical generalist who distrusts the headline. Attacks the strongest
-   claim and the most load-bearing number.
-3. **scientific** — biological/scientific plausibility and whether the narrative is forced onto
-   the data. Would the result survive an alternative explanation?
-4. **novelty** — what is actually new vs restated; whether comparisons to prior work /
-   benchmarks are missing or cherry-picked.
-5. **reproducibility** — can an outsider rerun this? Seeds, versions, data/code availability,
-   deposited accessions, env pinning.
-6. **computational** — the circularity / leakage / confounding / pseudoreplication / validation
-   specialist. Hunts for label-in-feature contamination, train-in-test leakage, non-independent
-   replicates, and circular readouts.
-
-## 3. Grounding (non-negotiable)
-
-Every finding must cite a **verbatim excerpt** from the draft (quote + section/line) as its
-anchor. The quote is what you guarantee; the scientific judgment attached to it is *unverified by
-design* and is the point the authors adjudicate. If you cannot ground a finding in a real quote,
-drop it — do not invent text. Findings skew low-confidence intentionally; breadth plus
-cross-role convergence is the design, not per-finding certainty.
-
-## 4. Per-finding schema
-
-Each finding is one line:
-
-```
-[severity | role(s)] <section> — <1-line issue grounded in a quote> → <cheap/decisive fix>
+```sh
+manuscript-review review <DRAFT> \
+  --llm --provider bedrock \
+  --model "${MANUSCRIPT_REVIEW_MODEL:?set or pass --model}" \
+  --journal "<target journal, if named>" \
+  --out "<DRAFT_DIR>/mar_reviews/<YYYY-MM-DD>" \
+  --force
 ```
 
-- **severity**: `major` / `moderate` / `minor`.
-- **role(s)**: which role(s) raised it; list all if convergent.
-- **fix**: prefer a *cheap decisive check* the authors can run (e.g. "re-run the classifier with
-  the N label genes excluded; report the AUROC delta") over vague advice.
+- **Default roles are the six core adversarial roles** (scientific, methods, computational,
+  novelty, reviewer2, reproducibility) — do not pass `--roles` unless the user wants a different
+  set (e.g. add `statistics,clinical`).
+- **Validate cheaply first when unsure:** `--dry-run` with `--llm` exports the exact per-role
+  requests and runs the deterministic checks **without** calling Bedrock (no cost, no creds). Use
+  it to confirm extraction and role set before the real run.
+- **Version tracking:** when reviewing a revision, pass `--prior <OLD_DRAFT>` and, if available,
+  `--prior-review <OLD_report.json>` so the CLI marks each prior concern resolved / persistent /
+  worsened / out-of-scope. This is the right way to show a re-run supersedes an earlier one.
+- **Data safety:** do **not** pass `--export-prompts` for sensitive/unpublished manuscripts — it
+  writes the manuscript text into local reviewer packets. See the tool's `DATA_SAFETY.md`.
 
-Keep the finding falsifiable and specific. "Clarify the methods" is not a finding; "the δ≥0.15
-bar sits above the max observed 0.135 with no stated justification → report the δ distribution
-and justify the cut" is.
+Outputs land in `<out>/`: `report.md` (read this), `report.json` (structured findings),
+`diagnostics.json`, `llm-run.json`, and `requests/<role>.json`.
 
-## 5. Procedure
+## 3. Triage
 
-**Pass 1 — per-role findings.** For each role, walk the draft section by section and emit every
-grounded finding at that role's altitude. Tag severity. Expect the Results and Methods sections
-to be densest. Do not deduplicate across roles yet — convergence is signal.
+The CLI emits grounded provider findings; your job is interpretation, not re-derivation. Read
+`report.md` and collapse it into the repo's checklist, `MAR_REVIEW_CHECKLIST_<YYYY-MM-DD>.md` next
+to the draft, following [references/checklist-template.md](references/checklist-template.md):
 
-**Pass 2 — triage.** Collapse the per-role findings into **priority themes** `T1, T2, …`, one per
-recurring issue (an issue flagged by ≥2 independent roles is a theme). For each theme give:
-- the roles that converged on it and the sections it touches,
-- a **recommended disposition**: `[A]` accept/revise, `[R]` rebut (and exactly how), `[P]`
-  partial, and
-- the single cheapest check that would settle it.
-Rank themes by (convergence × severity). Call out any finding that touches a specific headline
-number separately — those are the ones a reviewer can weaponize.
-Flag the hard gates for the target journal explicitly (§1).
+- Group recurring findings into **priority themes** `T1…Tn`; an issue raised by ≥2 independent
+  roles is the real signal (cross-role convergence), not any single low-confidence finding.
+- Give each theme a recommended disposition — `[A]` accept/revise, `[R]` rebut (how), `[P]`
+  partial — and the single cheapest check that settles it.
+- Call out any finding touching a specific headline number separately; those are weaponizable.
+- Flag the target journal's hard gates explicitly (e.g. Genome Biology: data + code availability,
+  deposited accessions, complete references).
+- When run with `--prior`, list what the revision **closed** so a re-run does not re-flag it.
 
-## 6. Output
+The six role charges are documented in [references/roles.md](references/roles.md) — use them to read
+and group the CLI's output.
 
-Write a dated checklist next to the draft: `MAR_REVIEW_CHECKLIST_<YYYY-MM-DD>.md`, following
-[references/checklist-template.md](references/checklist-template.md). Structure:
+## 4. Report back
 
-1. **Header** — draft path/version, roles run, finding count, the "reviewer-anticipation, not
-   detected errors; grounding guarantees the quote not the judgment" disclaimer.
-2. **Priority themes** — T1…Tn with convergence, recommended disposition, decisive check.
-3. **By section** — all findings, `[severity | roles]` + issue → fix, mapped to their theme.
-4. **Hard gates** — the target-journal gates and their status.
-5. **Status** — initially "unadjudicated; nothing in the draft changed off this review."
+Give the user a short plain-text summary: finding count by severity, the top themes by
+convergence, the suggested adjudication order (settle the highest-convergence hinge first), and the
+paths to `report.md` and the checklist. Do **not** edit the manuscript — MAR only reviews;
+adjudication (`[A]/[R]/[P]`) is the author's.
 
-Then give the user a short plain-text summary: finding count, the top 3 themes by convergence,
-and the suggested adjudication order (settle the highest-convergence hinge theme first). Do **not**
-edit the manuscript — MAR only reviews. Leave adjudication (`[A]/[R]/[P]`) to the user.
+## 5. Fallback — Claude-native panel
 
-## 7. Limits
+If the CLI is not installed, or Bedrock is unreachable, and the user wants the review now, perform
+the six-role panel yourself: read the whole draft, play each role in
+[references/roles.md](references/roles.md) independently, emit grounded findings
+(`[severity | role(s)] <section> — <issue + verbatim quote> → <cheap fix>`), and write the same
+checklist (§3). State clearly that this was the model-native fallback, not the CLI/Bedrock run, so
+the user knows the provenance. Never fabricate a quote, number, or citation.
 
-- You are anticipating reviewers, not fact-checking the science end-to-end. State clearly that
-  the judgments are unverified and that convergence, not any single finding, is the signal.
-- Never fabricate a quote, a number, or a citation. If a claim's supporting figure/table is
-  absent from the draft, that absence is itself a (reproducibility) finding.
-- Do not soften findings to be polite, and do not inflate a minor into a major to pad the list.
-- One clean re-run against a revised draft is the natural follow-up; keep each run's checklist
-  dated so the authors can diff.
+## 6. Limits
+
+- This anticipates reviewers; it does not fact-check the science or rerun analyses. Convergence,
+  not any single finding, is the signal.
+- The CLI records a `--journal` string but does not fetch live journal policy — apply the hard
+  gates from knowledge of the target journal.
+- Keep each run's output under a dated `--out` so revisions are diffable.
