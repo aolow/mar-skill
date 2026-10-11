@@ -19,12 +19,17 @@ references/checklist-template.md  the triage checklist format
 
 ## Install (global, all projects)
 
-```sh
-# the review engine (once):
-pip install "git+ssh://git@github.com/aolow/manuscript-adversarial-reviewer.git#egg=manuscript-adversarial-review[bedrock]"
+Clone both into `~/Stash_gh/` (the personal aolow-profile tree) via the `github-aolow` SSH alias
+(`~/.ssh/config` Host → github.com with the aolow key):
 
-# the skill (symlink into the user-level skills dir so /mar works everywhere):
-ln -s ~/Stash/mar-skill ~/.claude/skills/mar
+```sh
+# the review engine — editable install so the CLI stays current on `git pull`:
+git clone git@github-aolow:aolow/manuscript-adversarial-reviewer.git ~/Stash_gh/manuscript-adversarial-reviewer
+cd ~/Stash_gh/manuscript-adversarial-reviewer && pip install -e ".[bedrock]"
+
+# the skill — symlink into the user-level skills dir so /mar works everywhere:
+git clone git@github-aolow:aolow/mar-skill.git ~/Stash_gh/mar-skill
+ln -s ~/Stash_gh/mar-skill ~/.claude/skills/mar
 ```
 
 Bedrock needs `MANUSCRIPT_REVIEW_MODEL` (or `--model`) and AWS creds (`AWS_PROFILE` / `AWS_REGION`).
