@@ -1,101 +1,114 @@
 ---
 name: mar
-description: Manuscript Adversarial Reviewer. Drive the `manuscript-review` CLI (package manuscript-adversarial-review, repo aolow/manuscript-adversarial-reviewer) to run a six-role adversarial peer-review panel over Bedrock against a manuscript draft, then surface and triage the findings before submission. Use when the user asks to MAR a draft, run an adversarial/pre-submission review, stress-test a paper's claims, or anticipate reviewer attacks. Invoked as /mar [path-to-draft].
+description: Use the manuscript-review CLI to stress-test a scientific manuscript before submission or revision, then triage its evidence-linked findings. Use for requests to MAR a draft, run an adversarial review, or anticipate reviewer attacks. Supports offline review, explicitly selected provider review, and a labeled model-native fallback.
 ---
 
-# mar — Manuscript Adversarial Reviewer (wrapper)
+# MAR — Manuscript Adversarial Reviewer
 
-This skill is a **wrapper** around the real tool: the `manuscript-review` CLI (package
-`manuscript-adversarial-review`, source `github.com/aolow/manuscript-adversarial-reviewer`). The
-CLI does the work — it extracts the manuscript, runs deterministic reporting/design checks, calls
-the six-role LLM panel over Amazon Bedrock, grounds every concern to a verbatim excerpt, and writes
-a Markdown + JSON report. This skill's job is to invoke it correctly, keep the output durable, and
-triage the result into the repo's checklist format.
+Wrap the `manuscript-review` CLI from
+[`aolow/manuscript-adversarial-reviewer`](https://github.com/aolow/manuscript-adversarial-reviewer).
+The engine owns extraction, deterministic checks, optional provider calls, grounding,
+and version comparisons. This skill produces the final author-facing triage.
+Inspect `manuscript-review --version` and `manuscript-review review --help` for the
+installed contract; do not infer available flags from this document.
 
-The CLI is the source of truth for flags and behavior — run `manuscript-review review --help`
-rather than restating its rules here. If the CLI is unavailable, fall back to the Claude-native
-panel (§5).
+## 1. Establish scope
 
-## 1. Preflight
+- Locate the CLI with `command -v manuscript-review`. If unavailable, explain the
+  missing dependency and offer installation or the labeled fallback below. Do not
+  install or clone an execution copy into a temporary folder.
+- Use the draft, supplements, journal and old-version inputs supplied by the user.
+  Ask for the draft path only when it cannot be identified from context.
+- Honor the selected review mode/provider. Offline review needs no credentials.
+  A request to run a Bedrock/OpenAI review authorizes that selected run when the
+  manuscript-sharing scope is clear; existing authorization need not be repeated.
+  A general request to review a local file alone does not authorize uploading it.
+- For Bedrock, resolve the model and region from explicit settings or documented
+  environment variables. Do not guess a model, switch accounts/providers, display
+  credentials, or launch a paid call to test credentials.
+- Keep outputs outside source control, in a durable directory next to the draft:
+  `<draft_dir>/mar_reviews/<YYYY-MM-DD_HHMMSS>[_tag]/`. Check that it is unused;
+  choose a fresh suffix on collision. Never add `--force` automatically.
 
-1. **Find the CLI.** `command -v manuscript-review`. If missing, tell the user to install it (do
-   **not** clone into `/tmp`):
-   `pip install "git+ssh://git@github.com/aolow/manuscript-adversarial-reviewer.git#egg=manuscript-adversarial-review[bedrock]"`
-   then stop for them to install, or use the §5 fallback.
-2. **Bedrock creds.** The panel needs AWS credentials and a Bedrock model id. Check env:
-   `MANUSCRIPT_REVIEW_MODEL` (required unless passed as `--model`), `AWS_PROFILE` / `AWS_REGION`
-   (or `MANUSCRIPT_REVIEW_AWS_REGION`). If no model is resolvable, ask the user for the Bedrock
-   model id / inference-profile ARN (and confirm the AWS profile) before running — do not guess one.
-3. **Draft path** (required). If not given, ask. Note the draft's directory — output goes there.
+## 2. Run and inspect completion
 
-## 2. Run
-
-Always pass an explicit, durable `--out` **next to the manuscript** — the CLI's default output dir
-is relative to the current working directory, which is how a prior run landed in `/tmp` and nearly
-got purged. Write to `<draft_dir>/mar_reviews/<YYYY-MM-DD>[_tag]/` instead.
+Offline example:
 
 ```sh
-manuscript-review review <DRAFT> \
-  --llm --provider bedrock \
-  --model "${MANUSCRIPT_REVIEW_MODEL:?set or pass --model}" \
-  --journal "<target journal, if named>" \
-  --out "<DRAFT_DIR>/mar_reviews/<YYYY-MM-DD>" \
-  --force
+manuscript-review review "<DRAFT>" --out "<NEW_OUTPUT_DIR>"
 ```
 
-- **Default roles are the six core adversarial roles** (scientific, methods, computational,
-  novelty, reviewer2, reproducibility) — do not pass `--roles` unless the user wants a different
-  set (e.g. add `statistics,clinical`).
-- **Validate cheaply first when unsure:** `--dry-run` with `--llm` exports the exact per-role
-  requests and runs the deterministic checks **without** calling Bedrock (no cost, no creds). Use
-  it to confirm extraction and role set before the real run.
-- **Version tracking:** when reviewing a revision, pass `--prior <OLD_DRAFT>` and, if available,
-  `--prior-review <OLD_report.json>` so the CLI marks each prior concern resolved / persistent /
-  worsened / out-of-scope. This is the right way to show a re-run supersedes an earlier one.
-- **Data safety:** do **not** pass `--export-prompts` for sensitive/unpublished manuscripts — it
-  writes the manuscript text into local reviewer packets. See the tool's `DATA_SAFETY.md`.
+For an authorized Bedrock run (add `--journal` only if supplied):
 
-Outputs land in `<out>/`: `report.md` (read this), `report.json` (structured findings),
-`diagnostics.json`, `llm-run.json`, and `requests/<role>.json`.
+```sh
+manuscript-review review "<DRAFT>" \
+  --llm --provider bedrock --model "<MODEL_OR_PROFILE>" --region "<REGION>" \
+  --out "<NEW_OUTPUT_DIR>"
+```
 
-## 3. Triage
+- Keep the six default roles unless the user requests a different set. Role
+  charges for interpreting output are in [references/roles.md](references/roles.md).
+- A separate `--dry-run` output lets the user inspect extraction and exact requests
+  without provider calls. It is a preview, not a completed model review.
+- In revision mode, add `--prior <OLD_DRAFT>` and, when available,
+  `--prior-review <OLD_REPORT_JSON>`, plus version-specific supplements. This uses
+  **one comparison request**, not a fresh six-role panel over the revision. Keep
+  scope withdrawal, weaker wording, and methodological repair distinct.
+- Exit 2 means input/configuration/output failure. Exit 3 means incomplete provider
+  review: inspect surviving artifacts and failed roles; do not silently rerun.
+  Exit 0 means processing succeeded, not scientific validation or complete coverage.
+- Read `report.json` and `report.md`; for provider runs also inspect `diagnostics.json`
+  and `llm-run.json`. Record actual mode, engine version, source hashes, requested
+  roles, returned/failed roles, item exclusions, and quarantined findings. Never
+  hard-code “six-role panel complete.”
+- `requests/*.json` is exported for provider runs including dry runs and contains
+  manuscript text even without `--export-prompts`. Reports and checklists are also
+  sensitive. Keep all artifacts within the authorized local workflow.
 
-The CLI emits grounded provider findings; your job is interpretation, not re-derivation. Read
-`report.md` and collapse it into the repo's checklist, `MAR_REVIEW_CHECKLIST_<YYYY-MM-DD>.md` next
-to the draft, following [references/checklist-template.md](references/checklist-template.md):
+## 3. Challenge the review, then synthesize
 
-- Group recurring findings into **priority themes** `T1…Tn`; an issue raised by ≥2 independent
-  roles is the real signal (cross-role convergence), not any single low-confidence finding.
-- Give each theme a recommended disposition — `[A]` accept/revise, `[R]` rebut (how), `[P]`
-  partial — and the single cheapest check that settles it.
-- Call out any finding touching a specific headline number separately; those are weaponizable.
-- Flag the target journal's hard gates explicitly (e.g. Genome Biology: data + code availability,
-  deposited accessions, complete references).
-- When run with `--prior`, list what the revision **closed** so a re-run does not re-flag it.
+Before choosing headline themes, use the bounded evidence check in
+[references/synthesis.md](references/synthesis.md). This is a triage pass over
+existing outputs and supplied source passages; it does not start another panel,
+execute analyses, retrieve literature, or change the engine's findings.
 
-The six role charges are documented in [references/roles.md](references/roles.md) — use them to read
-and group the CLI's output.
+Write a fresh `MAR_REVIEW_CHECKLIST_<RUN_TAG>.md` next to the draft, using
+[references/checklist-template.md](references/checklist-template.md).
+
+- Rank at most 3–7 justified themes by impact on the central claim, source support,
+  and what can be decided next. Do not pad the list. A strong single-role concern
+  can outrank a repeated weak opinion.
+- Preserve engine finding IDs, source locations, confidence, disposition, and
+  provenance. Group duplicate findings under their canonical ID; retain disagreement.
+  Role counts show recurrence, not independent corroboration or higher confidence.
+- Keep `needs_review`, external/unverified suggestions, dismissed items, and duplicate
+  records distinct from active concerns. Do not promote them by summarizing them.
+  New synthesis suggestions must be labeled separately; never edit `report.json`
+  to make them look engine-validated.
+- Recommend accept/revise, rebut, partial, or verify first, with the decisive check.
+  The author's actual adjudication remains open. Do not edit the manuscript.
+- State journal requirements as verified only with a supplied authoritative policy
+  or a current official source obtained within authorized search scope. Record the
+  URL/date. Otherwise say “journal requirement unverified”; model memory is not a gate.
+- For revisions, report statuses from `comparison.json` and their source evidence.
+  Disappearance alone does not establish resolution or completed analysis.
 
 ## 4. Report back
 
-Give the user a short plain-text summary: finding count by severity, the top themes by
-convergence, the suggested adjudication order (settle the highest-convergence hinge first), and the
-paths to `report.md` and the checklist. Do **not** edit the manuscript — MAR only reviews;
-adjudication (`[A]/[R]/[P]`) is the author's.
+Give actual coverage and active concern counts by severity, the top themes in
+revision order, the most useful next check, and links to the report and checklist.
+Mention material exclusions or failed roles. Do not equate a clean report or
+agreement among roles with readiness for submission.
 
-## 5. Fallback — Claude-native panel
+## 5. Model-native fallback
 
-If the CLI is not installed, or Bedrock is unreachable, and the user wants the review now, perform
-the six-role panel yourself: read the whole draft, play each role in
-[references/roles.md](references/roles.md) independently, emit grounded findings
-(`[severity | role(s)] <section> — <issue + verbatim quote> → <cheap fix>`), and write the same
-checklist (§3). State clearly that this was the model-native fallback, not the CLI/Bedrock run, so
-the user knows the provenance. Never fabricate a quote, number, or citation.
+When the CLI/provider is unavailable and the user wants to proceed in the current
+conversation, apply the role lenses in [references/roles.md](references/roles.md)
+to the supplied draft and use the same evidence check/checklist. Honor the current
+sharing scope. Do not switch providers or upload files to obtain the fallback.
 
-## 6. Limits
-
-- This anticipates reviewers; it does not fact-check the science or rerun analyses. Convergence,
-  not any single finding, is the signal.
-- The CLI records a `--journal` string but does not fetch live journal policy — apply the hard
-  gates from knowledge of the target journal.
-- Keep each run's output under a dated `--out` so revisions are diffable.
+Label it **model-native review; CLI validation not performed**. One model applying
+six lenses is not six independent reviewers. Record which sources were actually
+read, distinguish observations from hypotheses, and retain exact quotes/locations
+where possible. Do not claim engine finding IDs, schema validation, executable
+analysis, or verified external literature. Preserve any partial CLI run separately.

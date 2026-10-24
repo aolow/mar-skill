@@ -1,66 +1,54 @@
 # MAR checklist output template
 
-Copy this structure into `MAR_REVIEW_CHECKLIST_<YYYY-MM-DD>.md` next to the draft. Replace the
-bracketed parts. The example cells below are illustrative of the *form*, not real findings.
-
----
+Save a fresh `MAR_REVIEW_CHECKLIST_<RUN_TAG>.md` next to the draft. Replace the
+placeholders with observed facts; omit empty themes. Do not assume full completion.
 
 ```markdown
-# MAR adversarial-review triage — <DRAFT_FILE> (<YYYY-MM-DD>)
+# MAR review triage — <draft> (<run tag>)
 
-Source: manuscript-adversarial-reviewer, six-role panel (methods, reviewer2, scientific, novelty,
-reproducibility, computational) on `<path/to/draft>`. <N> findings.
+Source: <report path and run_id, engine version, manuscript hashes; or model-native>.
+Mode: <offline / provider panel / paired comparison / preview / model-native>.
+Coverage: <roles requested, returned and failed; rejected items; quarantined concerns>.
+Counts: <active concerns by severity; pending candidates separately>.
 
-These are **reviewer-anticipation items on an unsubmitted draft**, not detected errors. Grounding
-guarantees only that each cited quote is a verbatim excerpt — the scientific judgments are
-unverified and are the point to adjudicate. Mark each: **[A]** accept/revise, **[R]** rebut (and
-how), **[P]** partial. Findings skew low-confidence by design; the cross-role convergence (same
-issue from independent roles) is the real signal.
+Source matching establishes the quoted text, not scientific correctness. Repeated
+role opinions are not independent evidence. Recommendations below await author
+adjudication; the manuscript and engine records have not been changed.
 
----
+## Priority themes
 
-## Priority themes (recur across roles/sections) — recommended disposition
+### T1 — <claim-level concern>. Recommendation: <accept/revise / rebut / partial / verify first>
 
-**T1 — <one-line theme>. [recommend A|R|P]**
-<which roles converged, which sections>. <the issue in 2–3 sentences, grounded>.
-Decisive check: <the single cheapest thing that settles it>.
+- Claim at stake: <actual claim and consequence>.
+- Source records: <canonical finding ID(s), role(s), severity, confidence, disposition>.
+- Evidence: <short exact passage and source location; distinguish observation from inference>.
+- Counterevidence / strongest rebuttal: <source and interpretation, or not located in supplied material>.
+- Judgment: <why the concern survives, narrows, or needs verification; any disagreement>.
+- Decisive next check: <data required, comparison, unit, metric, and what would change the judgment>.
 
-**T2 — <one-line theme>. [recommend A|R|P]**
-...
+<Repeat only for justified themes, ordered by impact and evidence, not role count.>
 
-(Order themes by convergence × severity. Give any theme that touches a specific headline number
-its own line and flag it — those are the weaponizable ones.)
+## Strengths to preserve
 
----
+- <Reported evidence and the bounded contribution it supports; source ID/location>.
 
-## By section (all findings; [sev | roles] + 1-line issue → fix)
+## Other findings and verification queue
 
-### Results / "<subsection heading>" (<count>)
-- [ ] **major** <role> — <issue, grounded in a quote> → <fix>. *(T1)*
-- [ ] moderate <role> — <issue> → <fix>. *(T2)*
-- [ ] minor <role> — <issue> → <fix>.
+- [ ] <finding ID; disposition; severity; role(s)> — <issue → check; theme if grouped>.
+- [ ] <external or quarantined suggestion; verification needed before promotion>.
 
-### Methods (<count>)
-- [ ] ...
+## Revision status (paired mode only)
 
-### Discussion (<count>)
-- [ ] ...
+<Resolved / partial / persistent / worsened / unclear / newly detected / scope withdrawn,
+with comparison record IDs and old/new evidence. Execution remains unverified.>
 
-### Availability of data and materials (<count>)
-- [ ] ...
+## Journal requirements (if relevant)
 
----
+- <Requirement; official source URL/date or supplied policy; met / partial / unverified>.
 
-## Hard gates (<target journal, or "journal-agnostic">)
-- [ ] <gate — e.g. deposit datasets X/Y/Z + accessions> — status: unmet / partial / met.
-- [ ] <gate — permanent code URL + pinned env> — status: ...
+## Author decisions
 
----
+- T1: [ ] Accept/revise [ ] Rebut [ ] Partial [ ] Verify first. Reason: <author fills in>.
 
-## Status
-- Six-role panel complete; <N> findings. Cross-role convergence: <which themes were flagged by
-  the most independent roles>.
-- **Nothing in the draft has been changed off this review.** All items unadjudicated.
-- Suggested order: settle the highest-convergence hinge theme (<T#>) first, then run the cheap
-  decisive checks for <T#, T#>.
+Suggested first step: <highest-value discriminating check; prerequisites if unknown>.
 ```
