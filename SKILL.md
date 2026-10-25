@@ -74,6 +74,9 @@ execute analyses, retrieve literature, or change the engine's findings.
 
 Write a fresh `MAR_REVIEW_CHECKLIST_<RUN_TAG>.md` next to the draft, using
 [references/checklist-template.md](references/checklist-template.md).
+Apply [references/writing.md](references/writing.md) to the checklist and report
+back: concise scientific language, neutral judgments, references beside claims,
+and enough study context to interpret results and conclusions.
 
 - Open with the template's short **Review at a glance**, written after the evidence
   challenge. Link its assessment, contribution, priorities and next step to the

@@ -2,6 +2,8 @@
 
 Save a fresh `MAR_REVIEW_CHECKLIST_<RUN_TAG>.md` next to the draft. Replace the
 placeholders with observed facts; omit empty themes. Do not assume full completion.
+Follow [writing.md](writing.md): state results, interpretations and limits directly,
+with adjacent references and enough study context to assess each conclusion.
 
 Aim for 120–180 words in **Review at a glance**, using the completed triage as its
 source. State a bounded scientific assessment, one supported contribution, up to
@@ -21,12 +23,12 @@ main revision need; link to relevant themes>.
 
 **Main contribution:** <bounded, supported strength, linked to S1; or not established>.
 
-**Focus on these first:**
+**Review priorities:**
 
 1. <highest-value revision or explicitly labeled verification task> — [T1](#t1).
 <Up to two more priorities if justified; preserve their status.>
 
-**Best next step:** <one practical action and why it matters; link to the theme>.
+**Next step:** <one practical action and why it matters; link to the theme>.
 
 *Scope: <actual mode, draft/version and material exclusions or incomplete coverage>.*
 
@@ -49,9 +51,9 @@ adjudication; the manuscript and engine records have not been changed.
 
 - Claim at stake: <actual claim and consequence>.
 - Source records: <canonical finding ID(s), role(s), severity, confidence, disposition>.
-- Evidence: <short exact passage and source location; distinguish observation from inference>.
+- Reported result: <study context, relevant result and short exact passage with source location>.
 - Counterevidence / strongest rebuttal: <source and interpretation, or not located in supplied material>.
-- Judgment: <why the concern survives, narrows, or needs verification; any disagreement>.
+- Assessment: <what the result supports, its limits, references and any disagreement>.
 - Decisive next check: <data required, comparison, unit, metric, and what would change the judgment>.
 
 <Repeat only for justified themes, with stable anchors t2, t3, etc.; order by impact

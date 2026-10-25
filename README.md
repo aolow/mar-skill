@@ -14,9 +14,9 @@ triages the result into the dated `MAR_REVIEW_CHECKLIST_*.md` format. It is **no
 Two worked examples in the engine repository illustrate the evidence challenge
 and final triage, including counterevidence and concerns withdrawn after checking:
 
-- **[Single-cell foundation models](https://github.com/aolow/manuscript-adversarial-reviewer/tree/184abd292f500ac96b86d34d70323d19716186d5/showcases/single-cell-foundation-models):**
+- **[Single-cell foundation models](https://github.com/aolow/manuscript-adversarial-reviewer/tree/185d8c86aa1d3045b4ec86f9a0144c5f416571e4/showcases/single-cell-foundation-models):**
   respect a benchmark's scope and recognize objections the authors already address.
-- **[Virtual Biotech](https://github.com/aolow/manuscript-adversarial-reviewer/tree/184abd292f500ac96b86d34d70323d19716186d5/showcases/virtual-biotech):**
+- **[Virtual Biotech](https://github.com/aolow/manuscript-adversarial-reviewer/tree/185d8c86aa1d3045b4ec86f9a0144c5f416571e4/showcases/virtual-biotech):**
   distinguish observational evidence from mechanism and validated treatment selection.
 
 Each combines an actual offline CLI run with a separately authored model-native
@@ -25,7 +25,7 @@ reviews. Every engine lead is preserved and triaged; source versions, exact
 evidence anchors and reproduction instructions are included. The Virtual Biotech
 case reviews its February 2026 preprint, not the later journal article.
 
-[Reproduce both examples](https://github.com/aolow/manuscript-adversarial-reviewer/tree/184abd292f500ac96b86d34d70323d19716186d5/showcases).
+[Reproduce both examples](https://github.com/aolow/manuscript-adversarial-reviewer/tree/185d8c86aa1d3045b4ec86f9a0144c5f416571e4/showcases).
 
 ## Layout
 
@@ -34,6 +34,7 @@ SKILL.md                          the skill (name: mar) — wrapper + fallback
 references/roles.md               the six role charges (for reading/grouping output)
 references/checklist-template.md  the triage checklist format
 references/synthesis.md           evidence challenge before final triage
+references/writing.md             concise scientific prose, context and references
 ```
 
 ## Install (global, all projects)
@@ -79,6 +80,9 @@ provider. Offline review remains available without a cloud account.
 Final triage now checks each major concern against source evidence, counterevidence,
 and a feasible discriminating next step. Role agreement does not increase confidence.
 Coverage, validation exclusions, and unresolved external claims remain visible.
+The [writing convention](references/writing.md) applies to summaries and detailed
+assessments: direct scientific language, neutral wording, adjacent references, and
+the study context needed to interpret results and conclusions.
 This workflow is informed by Virtual Biotech and Virtual Lab, but its effect on
 scientific review quality still needs blinded human evaluation; see
 [the synthesis reference](references/synthesis.md).
