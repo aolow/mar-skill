@@ -75,6 +75,9 @@ execute analyses, retrieve literature, or change the engine's findings.
 Write a fresh `MAR_REVIEW_CHECKLIST_<RUN_TAG>.md` next to the draft, using
 [references/checklist-template.md](references/checklist-template.md).
 
+- Open with the template's short **Review at a glance**, written after the evidence
+  challenge. Link its assessment, contribution, priorities and next step to the
+  detailed review; preserve verification status and material coverage limits.
 - Rank at most 3–7 justified themes by impact on the central claim, source support,
   and what can be decided next. Do not pad the list. A strong single-role concern
   can outrank a repeated weak opinion.

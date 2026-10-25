@@ -14,9 +14,9 @@ triages the result into the dated `MAR_REVIEW_CHECKLIST_*.md` format. It is **no
 Two worked examples in the engine repository illustrate the evidence challenge
 and final triage, including counterevidence and concerns withdrawn after checking:
 
-- **[Single-cell foundation models](https://github.com/aolow/manuscript-adversarial-reviewer/tree/4bd2d87b14ffdeee8353e15180399681e6f81458/showcases/single-cell-foundation-models):**
+- **[Single-cell foundation models](https://github.com/aolow/manuscript-adversarial-reviewer/tree/184abd292f500ac96b86d34d70323d19716186d5/showcases/single-cell-foundation-models):**
   respect a benchmark's scope and recognize objections the authors already address.
-- **[Virtual Biotech](https://github.com/aolow/manuscript-adversarial-reviewer/tree/4bd2d87b14ffdeee8353e15180399681e6f81458/showcases/virtual-biotech):**
+- **[Virtual Biotech](https://github.com/aolow/manuscript-adversarial-reviewer/tree/184abd292f500ac96b86d34d70323d19716186d5/showcases/virtual-biotech):**
   distinguish observational evidence from mechanism and validated treatment selection.
 
 Each combines an actual offline CLI run with a separately authored model-native
@@ -25,7 +25,7 @@ reviews. Every engine lead is preserved and triaged; source versions, exact
 evidence anchors and reproduction instructions are included. The Virtual Biotech
 case reviews its February 2026 preprint, not the later journal article.
 
-[Reproduce both examples](https://github.com/aolow/manuscript-adversarial-reviewer/tree/4bd2d87b14ffdeee8353e15180399681e6f81458/showcases).
+[Reproduce both examples](https://github.com/aolow/manuscript-adversarial-reviewer/tree/184abd292f500ac96b86d34d70323d19716186d5/showcases).
 
 ## Layout
 

@@ -3,8 +3,34 @@
 Save a fresh `MAR_REVIEW_CHECKLIST_<RUN_TAG>.md` next to the draft. Replace the
 placeholders with observed facts; omit empty themes. Do not assume full completion.
 
+Aim for 120–180 words in **Review at a glance**, using the completed triage as its
+source. State a bounded scientific assessment, one supported contribution, up to
+three priorities and a useful first step. Link to the detailed themes/strengths;
+keep verification questions conditional and say when a strength is not established.
+Retain a short mode/version/coverage line. Do not introduce new findings, numerical
+quality scores or a submission-readiness verdict through the summary. Keep the
+source records and full evidence challenge below it.
+
 ```markdown
 # MAR review triage — <draft> (<run tag>)
+
+## Review at a glance
+
+**Assessment:** <one or two sentences about what the evidence supports and the
+main revision need; link to relevant themes>.
+
+**Main contribution:** <bounded, supported strength, linked to S1; or not established>.
+
+**Focus on these first:**
+
+1. <highest-value revision or explicitly labeled verification task> — [T1](#t1).
+<Up to two more priorities if justified; preserve their status.>
+
+**Best next step:** <one practical action and why it matters; link to the theme>.
+
+*Scope: <actual mode, draft/version and material exclusions or incomplete coverage>.*
+
+## Review record
 
 Source: <report path and run_id, engine version, manuscript hashes; or model-native>.
 Mode: <offline / provider panel / paired comparison / preview / model-native>.
@@ -17,6 +43,8 @@ adjudication; the manuscript and engine records have not been changed.
 
 ## Priority themes
 
+<a id="t1"></a>
+
 ### T1 — <claim-level concern>. Recommendation: <accept/revise / rebut / partial / verify first>
 
 - Claim at stake: <actual claim and consequence>.
@@ -26,11 +54,14 @@ adjudication; the manuscript and engine records have not been changed.
 - Judgment: <why the concern survives, narrows, or needs verification; any disagreement>.
 - Decisive next check: <data required, comparison, unit, metric, and what would change the judgment>.
 
-<Repeat only for justified themes, ordered by impact and evidence, not role count.>
+<Repeat only for justified themes, with stable anchors t2, t3, etc.; order by impact
+and evidence, not role count.>
 
 ## Strengths to preserve
 
-- <Reported evidence and the bounded contribution it supports; source ID/location>.
+<a id="s1"></a>
+
+- S1: <Reported evidence and the bounded contribution it supports; source ID/location>.
 
 ## Other findings and verification queue
 
