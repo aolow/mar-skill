@@ -9,6 +9,24 @@ findings, Markdown + JSON report). This skill invokes it correctly, keeps output
 triages the result into the dated `MAR_REVIEW_CHECKLIST_*.md` format. It is **not** a reimplementation
 — the CLI's `--help` and its own docs are the source of truth.
 
+## Real-paper showcases
+
+Two worked examples in the engine repository illustrate the evidence challenge
+and final triage, including counterevidence and concerns withdrawn after checking:
+
+- **[Single-cell foundation models](https://github.com/aolow/manuscript-adversarial-reviewer/tree/4bd2d87b14ffdeee8353e15180399681e6f81458/showcases/single-cell-foundation-models):**
+  respect a benchmark's scope and recognize objections the authors already address.
+- **[Virtual Biotech](https://github.com/aolow/manuscript-adversarial-reviewer/tree/4bd2d87b14ffdeee8353e15180399681e6f81458/showcases/virtual-biotech):**
+  distinguish observational evidence from mechanism and validated treatment selection.
+
+Each combines an actual offline CLI run with a separately authored model-native
+review. These are not six-role Bedrock runs or independently human-validated
+reviews. Every engine lead is preserved and triaged; source versions, exact
+evidence anchors and reproduction instructions are included. The Virtual Biotech
+case reviews its February 2026 preprint, not the later journal article.
+
+[Reproduce both examples](https://github.com/aolow/manuscript-adversarial-reviewer/tree/4bd2d87b14ffdeee8353e15180399681e6f81458/showcases).
+
 ## Layout
 
 ```
